@@ -60,6 +60,6 @@
     "rollup-plugin-babel": "^3.0.0",
     "rollup-plugin-commonjs": "^9.0.0",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "uglify-js": "^3.3.16"
+    "uglify-js": "^3.3.21"
   }
 }
