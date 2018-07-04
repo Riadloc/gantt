@@ -11,14 +11,14 @@ import Legend from './Legend';
 import getStyles from './styles';
 
 const LEGENDS = [{
-  type: 'bar',
-  name: 'Remaining'
-}, {
-  type: 'green',
-  name: 'Completed'
+  type: 'yellow',
+  name: '期望时间'
 }, {
   type: 'red',
-  name: 'Delay'
+  name: '实际时间'
+}, {
+  type: 'grey',
+  name: '超出期望时间'
 }];
 const UNIT = {
   day: DAY / 28,
@@ -41,8 +41,8 @@ export default function Gantt({
   styleOptions = {}
 }) {
   const unit = UNIT[viewMode];
-  const minTime = Math.min.apply(null, data.map(v => v.from)) - unit * 40;
-  const maxTime = Math.max.apply(null, data.map(v => v.to)) + unit * 40;
+  const minTime = Math.min.apply(null, data.map(v => v.expect_from)) - unit * 40;
+  const maxTime = Math.max.apply(null, data.map(v => v.expect_to).concat(data.map(v => v.expect_to||0))) + unit * 40;
 
   const width = (maxTime - minTime) / unit + maxTextWidth;
   const height = data.length * rowHeight + offsetY + footerHeight;

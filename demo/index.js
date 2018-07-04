@@ -51,10 +51,6 @@ function rand(begin) {
 
 function getData() {
   const data = [{
-    id: 1,
-    name: 'Waterfall model',
-    collapse: false,
-    children: [{
       id: 11,
       name: 'Requirements'
     }, {
@@ -66,12 +62,7 @@ function getData() {
     }, {
       id: 14,
       name: 'Verification'
-    }]
-  }, {
-    id: 2,
-    name: 'Development',
-    collapse: false,
-    children: [{
+    }, {
       id: 21,
       name: 'Preliminary'
     }, {
@@ -83,16 +74,13 @@ function getData() {
     }, {
       id: 24,
       name: 'Integration'
-    }]
-  }];
-  data.forEach((v) => {
-    v.children.forEach((item) => {
-      /* eslint-disable */
-      item.from = rand();
-      item.to = rand(item.from);
-      item.percent = Math.random();
-      /* eslint-enable */
-    });
+    }];
+  data.forEach(item => {
+    /* eslint-disable */
+    item.expect_from = rand();
+    item.expect_to = rand(item.expect_from);
+    item.reality_from = rand();
+    item.reality_to = rand(item.reality_from);
   });
   return data;
 }

@@ -38,30 +38,31 @@ export function formatDay(date) {
 export function formatData(data) {
   const list = [];
   data.forEach((v) => {
-    const min = Math.min.apply(null, v.children.map(c => c.from));
-    const max = Math.max.apply(null, v.children.map(c => c.to));
-    let percent = v.children.reduce((p, c) => p + c.percent, 0);
-    if (v.children.length) {
-      percent /= v.children.length;
-    }
+    // const min = Math.min.apply(null, v.children.map(c => c.from));
+    // const max = Math.max.apply(null, v.children.map(c => c.to));
+    // let percent = v.children.reduce((p, c) => p + c.percent, 0);
+    // if (v.children.length) {
+    //   percent /= v.children.length;
+    // }
 
     list.push({
       id: v.id,
-      group: true,
       name: v.name,
-      from: min,
-      to: max,
-      percent
+      expect_from: v.expect_from.getTime(),
+      expect_to: v.expect_to.getTime(),
+      reality_from: v.reality_from?v.reality_from.getTime():null,
+      reality_to: v.reality_to?v.reality_to.getTime():null
     });
-    v.children.forEach((c) => {
-      list.push({
-        id: c.id,
-        name: c.name,
-        from: c.from.getTime(),
-        to: c.to.getTime(),
-        percent: c.percent,
-      });
-    });
+    // v.children.forEach((c) => {
+    //   list.push({
+    //     id: c.id,
+    //     name: c.name,
+    //     from: c.from.getTime(),
+    //     to: c.to.getTime(),
+    //     percent: c.percent,
+    //   });
+    // });
   });
+  // console.log(list);
   return list;
 }

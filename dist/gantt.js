@@ -547,37 +547,32 @@
 	function formatData(data) {
 	  var list = [];
 	  data.forEach(function (v) {
-	    var min = Math.min.apply(null, v.children.map(function (c) {
-	      return c.from;
-	    }));
-	    var max = Math.max.apply(null, v.children.map(function (c) {
-	      return c.to;
-	    }));
-	    var percent = v.children.reduce(function (p, c) {
-	      return p + c.percent;
-	    }, 0);
-	    if (v.children.length) {
-	      percent /= v.children.length;
-	    }
+	    // const min = Math.min.apply(null, v.children.map(c => c.from));
+	    // const max = Math.max.apply(null, v.children.map(c => c.to));
+	    // let percent = v.children.reduce((p, c) => p + c.percent, 0);
+	    // if (v.children.length) {
+	    //   percent /= v.children.length;
+	    // }
 
 	    list.push({
 	      id: v.id,
-	      group: true,
 	      name: v.name,
-	      from: min,
-	      to: max,
-	      percent: percent
+	      expect_from: v.expect_from.getTime(),
+	      expect_to: v.expect_to.getTime(),
+	      reality_from: v.reality_from ? v.reality_from.getTime() : null,
+	      reality_to: v.reality_to ? v.reality_to.getTime() : null
 	    });
-	    v.children.forEach(function (c) {
-	      list.push({
-	        id: c.id,
-	        name: c.name,
-	        from: c.from.getTime(),
-	        to: c.to.getTime(),
-	        percent: c.percent
-	      });
-	    });
+	    // v.children.forEach((c) => {
+	    //   list.push({
+	    //     id: c.id,
+	    //     name: c.name,
+	    //     from: c.from.getTime(),
+	    //     to: c.to.getTime(),
+	    //     percent: c.percent,
+	    //   });
+	    // });
 	  });
+	  // console.log(list);
 	  return list;
 	}
 
@@ -893,7 +888,7 @@
 	          key: i,
 	          x: 10,
 	          y: (i + 0.5) * rowHeight + offsetY,
-	          style: v.group ? styles.groupLabel : styles.label
+	          style: styles.groupLabel
 	        },
 	        v.name
 	      );
@@ -923,18 +918,26 @@
 	    null,
 	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
 	    data.map(function (v, i) {
-	      var w1 = (v.to - v.from) / unit;
+	      var w3 = 0,
+	          w4 = 0,
+	          w5 = 0;
+
+	      var w1 = (v.expect_to - v.expect_from) / unit;
+	      if (v.reality_from) {
+	        w3 = (v.reality_from - v.expect_from) / unit;
+	      }
+	      if (v.reality_to) {
+	        if (v.reality_to > v.expect_to) {
+	          w4 = (v.expect_to - v.reality_from) / unit;
+	          w5 = (v.reality_to - v.expect_to) / unit;
+	        } else {
+	          w4 = (v.reality_to - v.reality_from) / unit;
+	        }
+	      }
 	      var w2 = w1 * v.percent;
-	      var x = x0 + (v.from - minTime) / unit;
+	      var x = x0 + (v.expect_from - minTime) / unit;
 	      var y = y0 + i * rowHeight;
 	      var TY = y + barHeight / 2;
-	      var type = 'green';
-	      if (x + w2 < cur && v.percent < 0.999999) {
-	        type = 'red';
-	      }
-	      if (v.group) {
-	        type = 'group';
-	      }
 	      var handler = function handler() {
 	        return onClick(v);
 	      };
@@ -944,15 +947,16 @@
 	        h(
 	          'text',
 	          { x: x - 4, y: TY, style: styles.text1 },
-	          formatDay(new Date(v.from))
+	          formatDay(new Date(v.expect_from))
 	        ),
 	        h(
 	          'text',
 	          { x: x + w1 + 4, y: TY, style: styles.text2 },
-	          formatDay(new Date(v.to))
+	          formatDay(new Date(v.expect_to))
 	        ),
-	        h('rect', { x: x, y: y, width: w1, height: barHeight, rx: 1.8, ry: 1.8, style: styles.bar, onClick: handler }),
-	        w2 > 0.000001 ? h('rect', { x: x, y: y, width: w2, height: barHeight, rx: 1.8, ry: 1.8, style: styles[type] }) : null
+	        h('rect', { x: x, y: y, width: w1, height: barHeight, rx: 1.8, ry: 1.8, style: styles.yellow, onClick: handler }),
+	        w3 ? h('rect', { x: x + w3, y: y, width: w4 ? w4 : 2, height: barHeight, rx: 1.8, ry: 1.8, style: styles.red }) : null,
+	        w5 ? h('rect', { x: x + w1, y: y, width: w5, height: barHeight, rx: 1.8, ry: 1.8, style: styles.grey }) : null
 	      );
 	    })
 	  );
@@ -1017,7 +1021,11 @@
 	      _ref2$groupBar = _ref2.groupBar,
 	      groupBar = _ref2$groupBar === undefined ? '#52c41a' : _ref2$groupBar,
 	      _ref2$redBar = _ref2.redBar,
-	      redBar = _ref2$redBar === undefined ? '#ed7f2c' : _ref2$redBar,
+	      redBar = _ref2$redBar === undefined ? '#ed3f14' : _ref2$redBar,
+	      _ref2$yellowBar = _ref2.yellowBar,
+	      yellowBar = _ref2$yellowBar === undefined ? '#ff9900' : _ref2$yellowBar,
+	      _ref2$greyBar = _ref2.greyBar,
+	      greyBar = _ref2$greyBar === undefined ? '#dddee1' : _ref2$greyBar,
 	      _ref2$textColor = _ref2.textColor,
 	      textColor = _ref2$textColor === undefined ? '#222' : _ref2$textColor,
 	      _ref2$lightTextColor = _ref2.lightTextColor,
@@ -1088,6 +1096,12 @@
 	    red: {
 	      fill: redBar
 	    },
+	    yellow: {
+	      fill: yellowBar
+	    },
+	    grey: {
+	      fill: greyBar
+	    },
 	    group: {
 	      fill: groupBar
 	    }
@@ -1095,14 +1109,14 @@
 	}
 
 	var LEGENDS = [{
-	  type: 'bar',
-	  name: 'Remaining'
-	}, {
-	  type: 'green',
-	  name: 'Completed'
+	  type: 'yellow',
+	  name: '期望时间'
 	}, {
 	  type: 'red',
-	  name: 'Delay'
+	  name: '实际时间'
+	}, {
+	  type: 'grey',
+	  name: '超出期望时间'
 	}];
 	var UNIT = {
 	  day: DAY / 28,
@@ -1137,11 +1151,13 @@
 
 	  var unit = UNIT[viewMode];
 	  var minTime = Math.min.apply(null, data.map(function (v) {
-	    return v.from;
+	    return v.expect_from;
 	  })) - unit * 40;
 	  var maxTime = Math.max.apply(null, data.map(function (v) {
-	    return v.to;
-	  })) + unit * 40;
+	    return v.expect_to;
+	  }).concat(data.map(function (v) {
+	    return v.expect_to || 0;
+	  }))) + unit * 40;
 
 	  var width = (maxTime - minTime) / unit + maxTextWidth;
 	  var height = data.length * rowHeight + offsetY + footerHeight;

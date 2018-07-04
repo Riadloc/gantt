@@ -16,7 +16,9 @@ export default function getStyles({
   baseBar = '#b8c2cc',
   greenBar = '#52c41a',
   groupBar = '#52c41a',
-  redBar = '#ed7f2c',
+  redBar = '#ed3f14',
+  yellowBar = '#ff9900',
+  greyBar = '#dddee1',
   textColor = '#222',
   lightTextColor = '#999',
   lineWidth = '1px',
@@ -39,6 +41,12 @@ export default function getStyles({
   };
   const text = {
     fill: textColor,
+    'dominant-baseline': 'central',
+    'font-size': fontSize,
+    'font-family': fontFamily
+  };
+  const addressText = {
+    fill: greenBar,
     'dominant-baseline': 'central',
     'font-size': fontSize,
     'font-family': fontFamily
@@ -66,6 +74,10 @@ export default function getStyles({
       ...text,
       'font-weight': '600'
     },
+    addressLabel: {
+      ...addressText,
+      'font-weight': '600'
+    },
     text1: {
       ...text,
       ...smallText,
@@ -88,6 +100,12 @@ export default function getStyles({
     },
     red: {
       fill: redBar
+    },
+    yellow: {
+      fill: yellowBar
+    },
+    grey: {
+      fill: greyBar
     },
     group: {
       fill: groupBar
