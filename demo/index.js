@@ -7,6 +7,11 @@ import {
 const data = getData();
 const options = {
   viewMode: 'week',
+  dataMode: 'all',
+  toolTip: {
+    arrow: true,
+    theme: 'light'
+  },
   onClick: v => console.log(v)
 };
 const svgGantt = new SVGGantt('#svg', data, options);
@@ -24,13 +29,28 @@ document.querySelector('#viewMode').onchange = e => viewModeChanged(e.target.val
 
 function viewModeChanged(viewMode) {
   svgGantt.setOptions({
-    viewMode
+    toolTip: {
+      arrow: true,
+      theme: 'light'
+    },
+    viewMode,
+    dataMode: 'all'
   });
   canvasGantt.setOptions({
-    viewMode
+    toolTip: {
+      arrow: true,
+      theme: 'light'
+    },
+    viewMode,
+    dataMode: 'all'
   });
   strGantt.setOptions({
-    viewMode
+    toolTip: {
+      arrow: true,
+      theme: 'light'
+    },
+    viewMode,
+    dataMode: 'all'
   });
   renderStr();
 }
@@ -79,8 +99,13 @@ function getData() {
     /* eslint-disable */
     item.expect_from = rand();
     item.expect_to = rand(item.expect_from);
-    item.reality_from = rand();
-    item.reality_to = rand(item.reality_from);
+    // item.reality_from = rand();
+    // item.reality_to = rand(item.reality_from);
+    item.addon = {
+      label: 'ff',
+      assigned_user: 'ff',
+      status: 'ff'
+    }
   });
   return data;
 }

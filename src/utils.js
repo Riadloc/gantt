@@ -1,3 +1,7 @@
+function padZero(date) {
+  return ('0' + date).slice(-2);
+}
+
 export const DAY = 24 * 3600 * 1000;
 
 export function addDays(date, days) {
@@ -35,34 +39,27 @@ export function formatDay(date) {
   return `${m}/${d}`;
 }
 
-export function formatData(data) {
-  const list = [];
-  data.forEach((v) => {
-    // const min = Math.min.apply(null, v.children.map(c => c.from));
-    // const max = Math.max.apply(null, v.children.map(c => c.to));
-    // let percent = v.children.reduce((p, c) => p + c.percent, 0);
-    // if (v.children.length) {
-    //   percent /= v.children.length;
-    // }
+export function formatTime(date) {
+  const Y = date.getFullYear();
+  const M = padZero(date.getMonth() + 1);
+  const D = padZero(date.getDate());
+  const h = padZero(date.getHours());
+  const m = padZero(date.getMinutes());
+  const s = padZero(date.getSeconds());
+  return `${Y}-${M}-${D} ${h}:${m}:${s}`
+}
 
-    list.push({
+export function formatData(data) {
+  return data.map((v) => {
+    return {
       id: v.id,
       name: v.name,
       expect_from: v.expect_from.getTime(),
       expect_to: v.expect_to.getTime(),
       reality_from: v.reality_from?v.reality_from.getTime():null,
-      reality_to: v.reality_to?v.reality_to.getTime():null
-    });
-    // v.children.forEach((c) => {
-    //   list.push({
-    //     id: c.id,
-    //     name: c.name,
-    //     from: c.from.getTime(),
-    //     to: c.to.getTime(),
-    //     percent: c.percent,
-    //   });
-    // });
+      reality_to: v.reality_to?v.reality_to.getTime():null,
+      addon: v.addon
+    };
   });
-  // console.log(list);
-  return list;
 }
+

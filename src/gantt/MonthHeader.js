@@ -5,7 +5,8 @@ import Year from './Year';
 export default function MonthHeader({
   styles, unit, minTime, maxTime, offsetY, maxTextWidth
 }) {
-  const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTH = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+  // const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dates = getDates(minTime, maxTime);
   const months = dates.filter(v => (new Date(v)).getDate() === 1);
 

@@ -31,6 +31,7 @@ export default function Gantt({
   data = [],
   onClick = NOOP,
   viewMode = 'week',
+  dataMode = 'all',
   maxTextWidth = 140,
   offsetY = 60,
   rowHeight = 40,
@@ -41,9 +42,8 @@ export default function Gantt({
   styleOptions = {}
 }) {
   const unit = UNIT[viewMode];
-  const minTime = Math.min.apply(null, data.map(v => v.expect_from)) - unit * 40;
-  const maxTime = Math.max.apply(null, data.map(v => v.expect_to).concat(data.map(v => v.expect_to||0))) + unit * 40;
-
+  const minTime = Math.min.apply(null, data.map(v => v.expect_from).concat(data.filter(v => !!v.reality_from))) - unit * 40;
+  const maxTime = Math.max.apply(null, data.map(v => v.expect_to).concat(data.filter(v => !!v.reality_to))) + unit * 40;
   const width = (maxTime - minTime) / unit + maxTextWidth;
   const height = data.length * rowHeight + offsetY + footerHeight;
   const box = `0 0 ${width} ${height}`;
@@ -109,6 +109,7 @@ export default function Gantt({
       <Bar
         styles={styles}
         data={data}
+        dataMode={dataMode}
         unit={unit}
         height={height}
         current={current}
