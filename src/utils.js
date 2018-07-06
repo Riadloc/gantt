@@ -54,11 +54,13 @@ export function formatData(data) {
     return {
       id: v.id,
       name: v.name,
-      expect_from: v.expect_from.getTime(),
-      expect_to: v.expect_to.getTime(),
+      init_time: v.init_time.getTime(),
+      expect_from: v.expect_from?v.expect_from.getTime():null,
+      expect_to: v.expect_to?v.expect_to.getTime():null,
       reality_from: v.reality_from?v.reality_from.getTime():null,
       reality_to: v.reality_to?v.reality_to.getTime():null,
-      addon: v.addon
+      addon: v.addon,
+      important: v.important
     };
   });
 }

@@ -12,7 +12,8 @@ const options = {
     arrow: true,
     theme: 'light'
   },
-  onClick: v => console.log(v)
+  onClick: v => console.log(v),
+  onLabelClick: v => console.log(v)
 };
 const svgGantt = new SVGGantt('#svg', data, options);
 const canvasGantt = new CanvasGantt('#canvas', data, options);
@@ -95,12 +96,13 @@ function getData() {
       id: 24,
       name: 'Integration'
     }];
-  data.forEach(item => {
+  data.forEach((item,index) => {
     /* eslint-disable */
     item.expect_from = rand();
     item.expect_to = rand(item.expect_from);
-    // item.reality_from = rand();
-    // item.reality_to = rand(item.reality_from);
+    item.reality_from = rand();
+    item.reality_to = index%2?rand(item.reality_from):null;
+    item.important = true;
     item.addon = {
       label: 'ff',
       assigned_user: 'ff',

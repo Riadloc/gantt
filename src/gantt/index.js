@@ -12,13 +12,13 @@ import getStyles from './styles';
 
 const LEGENDS = [{
   type: 'yellow',
-  name: '期望时间'
+  name: '期望'
 }, {
-  type: 'red',
-  name: '实际时间'
+  type: 'greenA',
+  name: '实际'
 }, {
-  type: 'grey',
-  name: '超出期望时间'
+  type: 'buleA',
+  name: '进行中'
 }];
 const UNIT = {
   day: DAY / 28,
@@ -30,6 +30,7 @@ function NOOP() {}
 export default function Gantt({
   data = [],
   onClick = NOOP,
+  onLabelClick = NOOP,
   viewMode = 'week',
   dataMode = 'all',
   maxTextWidth = 140,
@@ -42,8 +43,10 @@ export default function Gantt({
   styleOptions = {}
 }) {
   const unit = UNIT[viewMode];
-  const minTime = Math.min.apply(null, data.map(v => v.expect_from).concat(data.filter(v => !!v.reality_from))) - unit * 40;
-  const maxTime = Math.max.apply(null, data.map(v => v.expect_to).concat(data.filter(v => !!v.reality_to))) + unit * 40;
+  let minTime;
+  let maxTime;
+  const minTime = Math.min.apply(null, data.map(v => v.expect_from).concat(data.filter(v => !!v.reality_from).map(v => v.reality_from))) - unit * 40;
+  const maxTime = Math.max.apply(null, data.map(v => v.expect_to).concat(data.filter(v => !!v.reality_to).map(v => v.reality_to))) + unit * 40;
   const width = (maxTime - minTime) / unit + maxTextWidth;
   const height = data.length * rowHeight + offsetY + footerHeight;
   const box = `0 0 ${width} ${height}`;
@@ -103,6 +106,7 @@ export default function Gantt({
       <Labels
         styles={styles}
         data={data}
+        onLabelClick={onLabelClick}
         offsetY={offsetY}
         rowHeight={rowHeight}
       />

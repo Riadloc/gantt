@@ -14,10 +14,15 @@ export default function getStyles({
   lineColor = '#eee',
   redLineColor = '#f04134',
   baseBar = '#b8c2cc',
+  whiteBar = '#ffffff',
   greenBar = '#52c41a',
+  greenBarA = 'rgba(82, 196, 26, .5)',
   groupBar = '#52c41a',
   redBar = '#ed3f14',
+  redBarA = 'rgba(237, 63, 20, .5)',
   yellowBar = '#ff9900',
+  yellowBarA = 'rgba(255, 153, 0, .5)',
+  buleBarA = 'rgba(45, 140, 240, 0.52)',
   greyBar = '#dddee1',
   textColor = '#222',
   lightTextColor = '#999',
@@ -46,7 +51,7 @@ export default function getStyles({
     'font-family': fontFamily
   };
   const addressText = {
-    fill: greenBar,
+    fill: redBar,
     'dominant-baseline': 'central',
     'font-size': fontSize,
     'font-family': fontFamily
@@ -95,14 +100,29 @@ export default function getStyles({
     bar: {
       fill: baseBar
     },
+    white: {
+      fill: whiteBar
+    },
     green: {
       fill: greenBar
+    },
+    greenA: {
+      fill: greenBarA
     },
     red: {
       fill: redBar
     },
+    redA: {
+      fill: redBarA
+    },
+    buleA: {
+      fill: buleBarA
+    },
     yellow: {
       fill: yellowBar
+    },
+    yellowA: {
+      fill: yellowBarA
     },
     grey: {
       fill: greyBar
