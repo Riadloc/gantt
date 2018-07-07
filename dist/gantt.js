@@ -4793,11 +4793,357 @@
 	})));
 	});
 
+	// true  -> String#at
+	// false -> String#codePointAt
+	var _stringAt = function (TO_STRING) {
+	  return function (that, pos) {
+	    var s = String(_defined(that));
+	    var i = _toInteger(pos);
+	    var l = s.length;
+	    var a, b;
+	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+	    a = s.charCodeAt(i);
+	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+	      ? TO_STRING ? s.charAt(i) : a
+	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+	  };
+	};
+
+	var _redefine = _hide;
+
+	var _iterators = {};
+
+	var _objectDps = _descriptors ? Object.defineProperties : function defineProperties(O, Properties) {
+	  _anObject(O);
+	  var keys = _objectKeys(Properties);
+	  var length = keys.length;
+	  var i = 0;
+	  var P;
+	  while (length > i) _objectDp.f(O, P = keys[i++], Properties[P]);
+	  return O;
+	};
+
+	var document$2 = _global.document;
+	var _html = document$2 && document$2.documentElement;
+
+	// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
+
+
+
+	var IE_PROTO$1 = _sharedKey('IE_PROTO');
+	var Empty = function () { /* empty */ };
+	var PROTOTYPE$1 = 'prototype';
+
+	// Create object with fake `null` prototype: use iframe Object with cleared prototype
+	var createDict = function () {
+	  // Thrash, waste and sodomy: IE GC bug
+	  var iframe = _domCreate('iframe');
+	  var i = _enumBugKeys.length;
+	  var lt = '<';
+	  var gt = '>';
+	  var iframeDocument;
+	  iframe.style.display = 'none';
+	  _html.appendChild(iframe);
+	  iframe.src = 'javascript:'; // eslint-disable-line no-script-url
+	  // createDict = iframe.contentWindow.Object;
+	  // html.removeChild(iframe);
+	  iframeDocument = iframe.contentWindow.document;
+	  iframeDocument.open();
+	  iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
+	  iframeDocument.close();
+	  createDict = iframeDocument.F;
+	  while (i--) delete createDict[PROTOTYPE$1][_enumBugKeys[i]];
+	  return createDict();
+	};
+
+	var _objectCreate = Object.create || function create(O, Properties) {
+	  var result;
+	  if (O !== null) {
+	    Empty[PROTOTYPE$1] = _anObject(O);
+	    result = new Empty();
+	    Empty[PROTOTYPE$1] = null;
+	    // add "__proto__" for Object.getPrototypeOf polyfill
+	    result[IE_PROTO$1] = O;
+	  } else result = createDict();
+	  return Properties === undefined ? result : _objectDps(result, Properties);
+	};
+
+	var _wks = createCommonjsModule(function (module) {
+	var store = _shared('wks');
+
+	var Symbol = _global.Symbol;
+	var USE_SYMBOL = typeof Symbol == 'function';
+
+	var $exports = module.exports = function (name) {
+	  return store[name] || (store[name] =
+	    USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : _uid)('Symbol.' + name));
+	};
+
+	$exports.store = store;
+	});
+
+	var def = _objectDp.f;
+
+	var TAG = _wks('toStringTag');
+
+	var _setToStringTag = function (it, tag, stat) {
+	  if (it && !_has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
+	};
+
+	var IteratorPrototype = {};
+
+	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+	_hide(IteratorPrototype, _wks('iterator'), function () { return this; });
+
+	var _iterCreate = function (Constructor, NAME, next) {
+	  Constructor.prototype = _objectCreate(IteratorPrototype, { next: _propertyDesc(1, next) });
+	  _setToStringTag(Constructor, NAME + ' Iterator');
+	};
+
+	// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
+
+
+	var IE_PROTO$2 = _sharedKey('IE_PROTO');
+	var ObjectProto = Object.prototype;
+
+	var _objectGpo = Object.getPrototypeOf || function (O) {
+	  O = _toObject(O);
+	  if (_has(O, IE_PROTO$2)) return O[IE_PROTO$2];
+	  if (typeof O.constructor == 'function' && O instanceof O.constructor) {
+	    return O.constructor.prototype;
+	  } return O instanceof Object ? ObjectProto : null;
+	};
+
+	var ITERATOR = _wks('iterator');
+	var BUGGY = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
+	var FF_ITERATOR = '@@iterator';
+	var KEYS = 'keys';
+	var VALUES = 'values';
+
+	var returnThis = function () { return this; };
+
+	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
+	  _iterCreate(Constructor, NAME, next);
+	  var getMethod = function (kind) {
+	    if (!BUGGY && kind in proto) return proto[kind];
+	    switch (kind) {
+	      case KEYS: return function keys() { return new Constructor(this, kind); };
+	      case VALUES: return function values() { return new Constructor(this, kind); };
+	    } return function entries() { return new Constructor(this, kind); };
+	  };
+	  var TAG = NAME + ' Iterator';
+	  var DEF_VALUES = DEFAULT == VALUES;
+	  var VALUES_BUG = false;
+	  var proto = Base.prototype;
+	  var $native = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT];
+	  var $default = $native || getMethod(DEFAULT);
+	  var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
+	  var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
+	  var methods, key, IteratorPrototype;
+	  // Fix native
+	  if ($anyNative) {
+	    IteratorPrototype = _objectGpo($anyNative.call(new Base()));
+	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
+	      // Set @@toStringTag to native iterators
+	      _setToStringTag(IteratorPrototype, TAG, true);
+	      // fix for some old engines
+	      if (!_library && typeof IteratorPrototype[ITERATOR] != 'function') _hide(IteratorPrototype, ITERATOR, returnThis);
+	    }
+	  }
+	  // fix Array#{values, @@iterator}.name in V8 / FF
+	  if (DEF_VALUES && $native && $native.name !== VALUES) {
+	    VALUES_BUG = true;
+	    $default = function values() { return $native.call(this); };
+	  }
+	  // Define iterator
+	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	    _hide(proto, ITERATOR, $default);
+	  }
+	  // Plug for library
+	  _iterators[NAME] = $default;
+	  _iterators[TAG] = returnThis;
+	  if (DEFAULT) {
+	    methods = {
+	      values: DEF_VALUES ? $default : getMethod(VALUES),
+	      keys: IS_SET ? $default : getMethod(KEYS),
+	      entries: $entries
+	    };
+	    if (FORCED) for (key in methods) {
+	      if (!(key in proto)) _redefine(proto, key, methods[key]);
+	    } else _export(_export.P + _export.F * (BUGGY || VALUES_BUG), NAME, methods);
+	  }
+	  return methods;
+	};
+
+	var $at = _stringAt(true);
+
+	// 21.1.3.27 String.prototype[@@iterator]()
+	_iterDefine(String, 'String', function (iterated) {
+	  this._t = String(iterated); // target
+	  this._i = 0;                // next index
+	// 21.1.5.2.1 %StringIteratorPrototype%.next()
+	}, function () {
+	  var O = this._t;
+	  var index = this._i;
+	  var point;
+	  if (index >= O.length) return { value: undefined, done: true };
+	  point = $at(O, index);
+	  this._i += point.length;
+	  return { value: point, done: false };
+	});
+
+	// call something on iterator step with safe closing on error
+
+	var _iterCall = function (iterator, fn, value, entries) {
+	  try {
+	    return entries ? fn(_anObject(value)[0], value[1]) : fn(value);
+	  // 7.4.6 IteratorClose(iterator, completion)
+	  } catch (e) {
+	    var ret = iterator['return'];
+	    if (ret !== undefined) _anObject(ret.call(iterator));
+	    throw e;
+	  }
+	};
+
+	// check on default Array iterator
+
+	var ITERATOR$1 = _wks('iterator');
+	var ArrayProto = Array.prototype;
+
+	var _isArrayIter = function (it) {
+	  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$1] === it);
+	};
+
+	var _createProperty = function (object, index, value) {
+	  if (index in object) _objectDp.f(object, index, _propertyDesc(0, value));
+	  else object[index] = value;
+	};
+
+	// getting tag from 19.1.3.6 Object.prototype.toString()
+
+	var TAG$1 = _wks('toStringTag');
+	// ES3 wrong here
+	var ARG = _cof(function () { return arguments; }()) == 'Arguments';
+
+	// fallback for IE11 Script Access Denied error
+	var tryGet = function (it, key) {
+	  try {
+	    return it[key];
+	  } catch (e) { /* empty */ }
+	};
+
+	var _classof = function (it) {
+	  var O, T, B;
+	  return it === undefined ? 'Undefined' : it === null ? 'Null'
+	    // @@toStringTag case
+	    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+	    // builtinTag case
+	    : ARG ? _cof(O)
+	    // ES3 arguments fallback
+	    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+	};
+
+	var ITERATOR$2 = _wks('iterator');
+
+	var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
+	  if (it != undefined) return it[ITERATOR$2]
+	    || it['@@iterator']
+	    || _iterators[_classof(it)];
+	};
+
+	var ITERATOR$3 = _wks('iterator');
+	var SAFE_CLOSING = false;
+
+	try {
+	  var riter = [7][ITERATOR$3]();
+	  riter['return'] = function () { SAFE_CLOSING = true; };
+	} catch (e) { /* empty */ }
+
+	var _iterDetect = function (exec, skipClosing) {
+	  if (!skipClosing && !SAFE_CLOSING) return false;
+	  var safe = false;
+	  try {
+	    var arr = [7];
+	    var iter = arr[ITERATOR$3]();
+	    iter.next = function () { return { done: safe = true }; };
+	    arr[ITERATOR$3] = function () { return iter; };
+	    exec(arr);
+	  } catch (e) { /* empty */ }
+	  return safe;
+	};
+
+	_export(_export.S + _export.F * !_iterDetect(function (iter) { }), 'Array', {
+	  // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
+	  from: function from(arrayLike /* , mapfn = undefined, thisArg = undefined */) {
+	    var O = _toObject(arrayLike);
+	    var C = typeof this == 'function' ? this : Array;
+	    var aLen = arguments.length;
+	    var mapfn = aLen > 1 ? arguments[1] : undefined;
+	    var mapping = mapfn !== undefined;
+	    var index = 0;
+	    var iterFn = core_getIteratorMethod(O);
+	    var length, result, step, iterator;
+	    if (mapping) mapfn = _ctx(mapfn, aLen > 2 ? arguments[2] : undefined, 2);
+	    // if object isn't iterable or it's array with default iterator - use simple case
+	    if (iterFn != undefined && !(C == Array && _isArrayIter(iterFn))) {
+	      for (iterator = iterFn.call(O), result = new C(); !(step = iterator.next()).done; index++) {
+	        _createProperty(result, index, mapping ? _iterCall(iterator, mapfn, [step.value, index], true) : step.value);
+	      }
+	    } else {
+	      length = _toLength(O.length);
+	      for (result = new C(length); length > index; index++) {
+	        _createProperty(result, index, mapping ? mapfn(O[index], index) : O[index]);
+	      }
+	    }
+	    result.length = index;
+	    return result;
+	  }
+	});
+
+	var from = _core.Array.from;
+
+	var from$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": from, __esModule: true };
+	});
+
+	unwrapExports(from$1);
+
+	var toConsumableArray = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+
+
+
+	var _from2 = _interopRequireDefault(from$1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.default = function (arr) {
+	  if (Array.isArray(arr)) {
+	    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+	      arr2[i] = arr[i];
+	    }
+
+	    return arr2;
+	  } else {
+	    return (0, _from2.default)(arr);
+	  }
+	};
+	});
+
+	var _toConsumableArray = unwrapExports(toConsumableArray);
+
 	function padZero(date) {
 	  return ('0' + date).slice(-2);
 	}
 
 	var DAY = 24 * 3600 * 1000;
+
+	var UNIT = {
+	  day: DAY / 28,
+	  week: 7 * DAY / 56,
+	  month: 30 * DAY / 56
+	};
 
 	function addDays(date, days) {
 	  date.setDate(date.getDate() + days);
@@ -4828,12 +5174,6 @@
 	  return y + '/' + (m > 9 ? m : '0' + m);
 	}
 
-	function formatDay(date) {
-	  var m = date.getMonth() + 1;
-	  var d = date.getDate();
-	  return m + '/' + d;
-	}
-
 	function formatTime(date) {
 	  var Y = date.getFullYear();
 	  var M = padZero(date.getMonth() + 1);
@@ -4849,13 +5189,75 @@
 	    return {
 	      id: v.id,
 	      name: v.name,
-	      expect_from: v.expect_from.getTime(),
-	      expect_to: v.expect_to.getTime(),
-	      reality_from: v.reality_from ? v.reality_from.getTime() : null,
-	      reality_to: v.reality_to ? v.reality_to.getTime() : null,
-	      addon: v.addon
+	      init_time: new Date(v.init_time).getTime(),
+	      expect_from: v.expect_from ? new Date(v.expect_from).getTime() : null,
+	      expect_to: v.expect_to ? new Date(v.expect_to).getTime() : null,
+	      reality_from: v.reality_from ? new Date(v.reality_from).getTime() : null,
+	      reality_to: v.reality_to ? new Date(v.reality_to).getTime() : null,
+	      addon: v.addon,
+	      important: v.important
 	    };
 	  });
+	}
+
+	function getExtremeTimeByDataMode(_ref) {
+	  var data = _ref.data,
+	      dataMode = _ref.dataMode,
+	      current = _ref.current,
+	      unit = _ref.unit;
+
+	  var minCol = void 0;
+	  var maxCol = void 0;
+	  switch (dataMode) {
+	    case 'all':
+	      minCol = [].concat(_toConsumableArray(data.map(function (v) {
+	        return v.expect_from;
+	      })), _toConsumableArray(data.map(function (v) {
+	        return v.reality_from;
+	      })), _toConsumableArray(data.map(function (v) {
+	        return v.init_time;
+	      }))).filter(function (v) {
+	        return Boolean(v);
+	      });
+	      maxCol = [].concat(_toConsumableArray(data.map(function (v) {
+	        return v.expect_to;
+	      })), _toConsumableArray(data.map(function (v) {
+	        return v.reality_to;
+	      }))).filter(function (v) {
+	        return Boolean(v);
+	      });
+	      break;
+	    case 'expect':
+	      minCol = [].concat(_toConsumableArray(data.map(function (v) {
+	        return v.expect_from;
+	      })), _toConsumableArray(data.map(function (v) {
+	        return v.init_time;
+	      }))).filter(function (v) {
+	        return Boolean(v);
+	      });
+	      maxCol = data.map(function (v) {
+	        return v.expect_to;
+	      });
+	      break;
+	    case 'reality':
+	      minCol = [].concat(_toConsumableArray(data.map(function (v) {
+	        return v.reality_from;
+	      })), _toConsumableArray(data.map(function (v) {
+	        return v.init_time;
+	      }))).filter(function (v) {
+	        return Boolean(v);
+	      });
+	      maxCol = data.map(function (v) {
+	        return v.reality_to;
+	      }).filter(function (v) {
+	        return Boolean(v);
+	      });
+	      if (!maxCol.length) maxCol = [current];
+	      break;
+	  }
+	  var minTime = Math.min.apply(null, minCol) - unit * 40;
+	  var maxTime = Math.max.apply(null, maxCol) + unit * 40;
+	  return { minTime: minTime, maxTime: maxTime };
 	}
 
 	function Layout(_ref) {
@@ -5140,24 +5542,24 @@
 	  var W = width - thickWidth * 2;
 	  var H = height - footerHeight;
 	  return h(
-	    'g',
-	    null,
+	    "g",
+	    { "class": "grid" },
 	    data.map(function (v, i) {
-	      if (!v.group) return null;
 	      var y = i * rowHeight + offsetY;
-	      return h('rect', { x: thickWidth, y: y, width: W, height: rowHeight, style: styles.groupBg });
+	      return h("rect", { x: thickWidth, y: y, width: W, height: rowHeight, style: styles.groupBg });
 	    }),
 	    data.map(function (v, i) {
 	      var y = (i + 1) * rowHeight + offsetY;
-	      return h('line', { key: i, x1: 0, x2: width, y1: y, y2: y, style: styles.line });
+	      return h("line", { key: i, x1: 0, x2: width, y1: y, y2: y, style: styles.line });
 	    }),
-	    h('line', { x1: maxTextWidth, x2: maxTextWidth, y1: 0, y2: H, style: styles.bline })
+	    h("line", { x1: maxTextWidth, x2: maxTextWidth, y1: 0, y2: H, style: styles.bline })
 	  );
 	}
 
 	function Labels(_ref) {
 	  var styles = _ref.styles,
 	      data = _ref.data,
+	      onLabelClick = _ref.onLabelClick,
 	      rowHeight = _ref.rowHeight,
 	      offsetY = _ref.offsetY;
 
@@ -5165,15 +5567,18 @@
 	    'g',
 	    { 'class': 'labels' },
 	    data.map(function (v, i) {
+	      var handler = function handler() {
+	        return onLabelClick(v);
+	      };
 	      return h(
 	        'g',
-	        { key: i, style: { cursor: 'pointer' } },
+	        { key: i, style: { cursor: 'pointer' }, onClick: handler },
 	        h(
 	          'text',
 	          {
 	            x: 10,
 	            y: (i + 0.5) * rowHeight + offsetY,
-	            style: styles.groupLabel
+	            style: v.important ? styles.addressLabel : styles.groupLabel
 	          },
 	          v.name
 	        )
@@ -5186,6 +5591,7 @@
 	  var x0 = _ref.x0,
 	      y0 = _ref.y0,
 	      cur = _ref.cur,
+	      current = _ref.current,
 	      styles = _ref.styles,
 	      data = _ref.data,
 	      unit = _ref.unit,
@@ -5202,73 +5608,47 @@
 	    { 'class': 'bar' },
 	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
 	    data.map(function (v, i) {
-	      var w3 = 0,
-	          w4 = 0,
-	          w5 = 0,
-	          w6 = 0;
+	      var x = 0,
+	          x1 = 0,
+	          w1 = 0,
+	          w2 = 0,
+	          w3 = 0;
 
-	      var w1 = (v.expect_to - v.expect_from) / unit;
-	      if (v.reality_from) {
-	        w3 = (v.reality_from - v.expect_from) / unit;
-	        if (!v.reality_to) {
-	          w4 = 2;
-	        }
-	      }
-	      if (v.reality_to) {
-	        if (v.reality_to > v.expect_to && v.reality_from < v.expect_from) {
-	          w4 = w1;
-	          w5 = (v.expect_from - v.reality_from) / unit;
-	          w6 = (v.reality_to - v.expect_to) / unit;
-	        } else if (v.reality_to > v.expect_to) {
-	          if (v.reality_from > v.expect_to) {
-	            w4 = (v.reality_to - v.reality_from) / unit;
-	            w5 = w4;
-	          } else {
-	            w4 = (v.expect_to - v.reality_from) / unit;
-	            w5 = (v.reality_to - v.expect_to) / unit;
-	          }
-	        } else if (v.reality_from < v.expect_from) {
-	          if (v.reality_to < v.expect_from) {
-	            w4 = (v.reality_to - v.reality_from) / unit;
-	            w5 = w4;
-	          } else {
-	            w4 = (v.reality_to - v.expect_from) / unit;
-	            w5 = (v.expect_from - v.reality_from) / unit;
-	          }
+	      if (!v.expect_to) {
+	        return h('g', null);
+	      } else {
+	        if (!v.expect_from) {
+	          x = x0 + (v.init_time - minTime) / unit;
+	          w1 = (v.expect_to - v.init_time) / unit;
 	        } else {
-	          w4 = (v.reality_to - v.reality_from) / unit;
+	          x = x0 + (v.expect_from - minTime) / unit;
+	          w1 = (v.expect_to - v.expect_from) / unit;
 	        }
 	      }
-	      var x = x0 + (v.expect_from - minTime) / unit;
+	      if (v.reality_from) {
+	        x1 = x0 + (v.reality_from - minTime) / unit;
+	        if (!v.reality_to) {
+	          w3 = (current - v.reality_from) / unit || 1;
+	        } else {
+	          w2 = (v.reality_to - v.reality_from) / unit;
+	        }
+	      } else if (v.reality_to) {
+	        x1 = x0 + (v.init_time - minTime) / unit;
+	        w2 = (v.reality_to - v.init_time) / unit;
+	      }
 	      var y = y0 + i * rowHeight;
-	      var TY = y + barHeight / 2;
+	      var EY = y + barHeight / 4;
 	      var handler = function handler() {
 	        return onClick(v);
 	      };
 	      var title = '<p>' + v.name + '-' + v.addon.status + '</p>\n        <p>\u6807\u7B7E\uFF1A' + v.addon.label + '</p>\n        <p>\u88AB\u6307\u6D3E\u4EBA\uFF1A' + v.addon.assigned_user + '</p>\n        <p>\u671F\u671B\u8D77\u6B62\u65F6\u95F4\uFF1A' + formatTime(new Date(v.expect_from)) + ' \u81F3 ' + formatTime(new Date(v.expect_to)) + '</p>\n        <p>\u5B9E\u9645\u8D77\u6B62\u65F6\u95F4\uFF1A' + (v.reality_from ? formatTime(new Date(v.reality_from)) : '未开始') + ' ' + (v.reality_to ? '至 ' + formatTime(new Date(v.reality_to)) : v.reality_from ? '未结束' : '') + '</p>';
-	      var hasOver = w3 < 0 || w3 > w1;
 	      return h(
 	        'g',
 	        { title: title, key: i, style: { cursor: 'pointer' }, onClick: handler },
-	        h(
-	          'text',
-	          { x: x - 4 + (w3 < 0 ? w3 : 0), y: TY, style: styles.text1 },
-	          formatDay(new Date(v.expect_from))
-	        ),
-	        w5 ? h(
-	          'text',
-	          { x: x + w1 + (w6 ? w6 : w3 > 0 ? w5 : 0) + 4, y: TY, style: styles.text2 },
-	          formatDay(new Date(v.reality_to))
-	        ) : h(
-	          'text',
-	          { x: x + w1 + 4, y: TY, style: styles.text2 },
-	          formatDay(new Date(v.expect_to))
-	        ),
-	        h('rect', { x: x, y: y, width: w1, height: barHeight, rx: 1.8, ry: 1.8, style: styles.yellow }),
-	        w4 !== w5 ? h('rect', { x: x + (w3 < 0 ? 0 : w3), y: y, width: w4, height: barHeight, rx: 1.8, ry: 1.8, style: styles.red }) : null,
-	        w5 || w4 === w5 ? h('rect', { x: x + (hasOver ? w3 : w1), y: y, width: w5, height: barHeight, rx: 1.8, ry: 1.8, style: styles.grey }) : null,
-	        w6 ? h('rect', { x: x + w1, y: y, width: w6, height: barHeight, rx: 1.8, ry: 1.8, style: styles.grey }) : null,
-	        w4 && hasOver && !w5 ? h('rect', { x: x + w3, y: y, width: w4, height: barHeight, rx: 1.8, ry: 1.8, style: styles.grey }) : null
+	        h('rect', { x: x, y: EY, width: w1, height: barHeight / 2, rx: 1.8, ry: 1.8, style: styles.yellow }),
+	        w2 ? h('rect', { x: x1, y: y, width: w2, height: barHeight, rx: 1.8, ry: 1.8, style: styles.greenA }) : null,
+	        w3 > 0 ? h('rect', { x: x1, y: y, width: w3, height: barHeight, style: styles.buleA }) : null,
+	        w3 > 0 ? h('path', { d: 'M' + (x1 + w3) + ' ' + y + ' L' + (x1 + w3) + ' ' + (y + barHeight) + ' L' + (x1 + w3 + 2 * barHeight / 3) + ' ' + (y + barHeight / 2) + ' Z', style: styles.buleA }) : null
 	      );
 	    })
 	  );
@@ -5294,10 +5674,21 @@
 	    { 'class': 'bar' },
 	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
 	    data.map(function (v, i) {
-	      var w1 = (v.expect_to - v.expect_from) / unit;
-	      var x = x0 + (v.expect_from - minTime) / unit;
+	      var x = 0,
+	          w1 = 0;
+
+	      if (!v.expect_to) {
+	        return h('g', null);
+	      } else {
+	        if (!v.expect_from) {
+	          x = x0 + (v.init_time - minTime) / unit;
+	          w1 = (v.expect_to - v.init_time) / unit;
+	        } else {
+	          x = x0 + (v.expect_from - minTime) / unit;
+	          w1 = (v.expect_to - v.expect_from) / unit;
+	        }
+	      }
 	      var y = y0 + i * rowHeight;
-	      var TY = y + barHeight / 2;
 	      var handler = function handler() {
 	        return onClick(v);
 	      };
@@ -5305,16 +5696,6 @@
 	      return h(
 	        'g',
 	        { title: title, key: i, style: { cursor: 'pointer' }, onClick: handler },
-	        h(
-	          'text',
-	          { x: x - 4, y: TY, style: styles.text1 },
-	          formatDay(new Date(v.expect_from))
-	        ),
-	        h(
-	          'text',
-	          { x: x + w1 + 4, y: TY, style: styles.text2 },
-	          formatDay(new Date(v.expect_to))
-	        ),
 	        h('rect', { x: x, y: y, width: w1, height: barHeight, rx: 1.8, ry: 1.8, style: styles.yellow })
 	      );
 	    })
@@ -5325,6 +5706,7 @@
 	  var x0 = _ref3.x0,
 	      y0 = _ref3.y0,
 	      cur = _ref3.cur,
+	      current = _ref3.current,
 	      styles = _ref3.styles,
 	      data = _ref3.data,
 	      unit = _ref3.unit,
@@ -5341,34 +5723,35 @@
 	    { 'class': 'bar' },
 	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
 	    data.map(function (v, i) {
-	      var w4 = 3;
-	      if (!v.reality_from) {
+	      var x1 = 0,
+	          w1 = 0,
+	          w2 = 0;
+
+	      if (v.reality_from) {
+	        x1 = x0 + (v.reality_from - minTime) / unit;
+	        if (!v.reality_to) {
+	          w2 = (current - v.reality_from) / unit || 1;
+	        } else {
+	          w1 = (v.reality_to - v.reality_from) / unit;
+	        }
+	      } else if (v.reality_to) {
+	        x1 = x0 + (v.init_time - minTime) / unit;
+	        w1 = (v.reality_to - v.init_time) / unit;
+	      } else {
 	        return h('g', null);
 	      }
-	      if (v.reality_to) {
-	        w4 = (v.reality_to - v.reality_from) / unit;
-	      }
-	      var x = x0 + (v.reality_from - minTime) / unit;
 	      var y = y0 + i * rowHeight;
-	      var TY = y + barHeight / 2;
+	      var reality_from = v.reality_from || v.init_time;
 	      var handler = function handler() {
 	        return onClick(v);
 	      };
-	      var title = '<p>' + v.name + '-' + v.addon.status + '</p>\n        <p>\u6807\u7B7E\uFF1A' + v.addon.label + '</p>\n        <p>\u88AB\u6307\u6D3E\u4EBA\uFF1A' + v.addon.assigned_user + '</p>\n        <p>\u5B9E\u9645\u8D77\u6B62\u65F6\u95F4\uFF1A' + (v.reality_from ? formatTime(new Date(v.reality_from)) : '未开始') + ' ' + (v.reality_to ? '至 ' + formatTime(new Date(v.reality_to)) : v.reality_from ? '未结束' : '') + '</p>';
+	      var title = '<p>' + v.name + '-' + v.addon.status + '</p>\n        <p>\u6807\u7B7E\uFF1A' + v.addon.label + '</p>\n        <p>\u88AB\u6307\u6D3E\u4EBA\uFF1A' + v.addon.assigned_user + '</p>\n        <p>\u5B9E\u9645\u8D77\u6B62\u65F6\u95F4\uFF1A' + formatTime(new Date(reality_from)) + ' \u81F3 ' + (v.reality_to ? formatTime(new Date(v.reality_to)) : '未结束') + '</p>';
 	      return h(
 	        'g',
 	        { title: title, key: i, style: { cursor: 'pointer' }, onClick: handler },
-	        h(
-	          'text',
-	          { x: x - 4, y: TY, style: styles.text1 },
-	          formatDay(new Date(v.reality_from))
-	        ),
-	        v.reality_to ? h(
-	          'text',
-	          { x: x + w4 + 4, y: TY, style: styles.text2 },
-	          formatDay(new Date(v.reality_to))
-	        ) : null,
-	        h('rect', { x: x, y: y, width: w4, height: barHeight, rx: 1.8, ry: 1.8, style: styles.red })
+	        w1 ? h('rect', { x: x1, y: y, width: w1, height: barHeight, rx: 1.8, ry: 1.8, style: styles.greenA }) : null,
+	        w2 ? h('rect', { x: x1, y: y, width: w2, height: barHeight, style: styles.buleA }) : null,
+	        w2 ? h('path', { d: 'M' + (x1 + w2) + ' ' + y + ' L' + (x1 + w2) + ' ' + (y + barHeight) + ' L' + (x1 + w2 + 2 * barHeight / 3) + ' ' + (y + barHeight / 2) + ' Z', style: styles.buleA }) : null
 	      );
 	    })
 	  );
@@ -5438,21 +5821,31 @@
 	  var _ref2$BG = _ref2.BG,
 	      BG = _ref2$BG === undefined ? '#fff' : _ref2$BG,
 	      _ref2$groupBg = _ref2.groupBg,
-	      groupBg = _ref2$groupBg === undefined ? '#f5f5f5' : _ref2$groupBg,
+	      groupBg = _ref2$groupBg === undefined ? 'rgba(0,0,0,0)' : _ref2$groupBg,
 	      _ref2$lineColor = _ref2.lineColor,
 	      lineColor = _ref2$lineColor === undefined ? '#eee' : _ref2$lineColor,
 	      _ref2$redLineColor = _ref2.redLineColor,
-	      redLineColor = _ref2$redLineColor === undefined ? '#f04134' : _ref2$redLineColor,
+	      redLineColor = _ref2$redLineColor === undefined ? '#ed3f14' : _ref2$redLineColor,
 	      _ref2$baseBar = _ref2.baseBar,
 	      baseBar = _ref2$baseBar === undefined ? '#b8c2cc' : _ref2$baseBar,
+	      _ref2$whiteBar = _ref2.whiteBar,
+	      whiteBar = _ref2$whiteBar === undefined ? '#ffffff' : _ref2$whiteBar,
 	      _ref2$greenBar = _ref2.greenBar,
 	      greenBar = _ref2$greenBar === undefined ? '#52c41a' : _ref2$greenBar,
+	      _ref2$greenBarA = _ref2.greenBarA,
+	      greenBarA = _ref2$greenBarA === undefined ? 'rgba(82, 196, 26, .5)' : _ref2$greenBarA,
 	      _ref2$groupBar = _ref2.groupBar,
 	      groupBar = _ref2$groupBar === undefined ? '#52c41a' : _ref2$groupBar,
 	      _ref2$redBar = _ref2.redBar,
 	      redBar = _ref2$redBar === undefined ? '#ed3f14' : _ref2$redBar,
+	      _ref2$redBarA = _ref2.redBarA,
+	      redBarA = _ref2$redBarA === undefined ? 'rgba(237, 63, 20, .5)' : _ref2$redBarA,
 	      _ref2$yellowBar = _ref2.yellowBar,
 	      yellowBar = _ref2$yellowBar === undefined ? '#ff9900' : _ref2$yellowBar,
+	      _ref2$yellowBarA = _ref2.yellowBarA,
+	      yellowBarA = _ref2$yellowBarA === undefined ? 'rgba(255, 153, 0, .5)' : _ref2$yellowBarA,
+	      _ref2$buleBarA = _ref2.buleBarA,
+	      buleBarA = _ref2$buleBarA === undefined ? 'rgba(45, 140, 240, 0.52)' : _ref2$buleBarA,
 	      _ref2$greyBar = _ref2.greyBar,
 	      greyBar = _ref2$greyBar === undefined ? '#dddee1' : _ref2$greyBar,
 	      _ref2$textColor = _ref2.textColor,
@@ -5489,7 +5882,7 @@
 	    'font-family': fontFamily
 	  };
 	  var addressText = {
-	    fill: greenBar,
+	    fill: redBar,
 	    'dominant-baseline': 'central',
 	    'font-size': fontSize,
 	    'font-family': fontFamily
@@ -5528,14 +5921,29 @@
 	    bar: {
 	      fill: baseBar
 	    },
+	    white: {
+	      fill: whiteBar
+	    },
 	    green: {
 	      fill: greenBar
+	    },
+	    greenA: {
+	      fill: greenBarA
 	    },
 	    red: {
 	      fill: redBar
 	    },
+	    redA: {
+	      fill: redBarA
+	    },
+	    buleA: {
+	      fill: buleBarA
+	    },
 	    yellow: {
 	      fill: yellowBar
+	    },
+	    yellowA: {
+	      fill: yellowBarA
 	    },
 	    grey: {
 	      fill: greyBar
@@ -5548,15 +5956,15 @@
 
 	var LEGENDS = [{
 	  type: 'yellow',
-	  name: '期望时间'
+	  name: '期望'
 	}, {
-	  type: 'red',
-	  name: '实际时间'
+	  type: 'greenA',
+	  name: '实际'
 	}, {
-	  type: 'grey',
-	  name: '超出期望时间'
+	  type: 'buleA',
+	  name: '进行中'
 	}];
-	var UNIT = {
+	var UNIT$1 = {
 	  day: DAY / 28,
 	  week: 7 * DAY / 56,
 	  month: 30 * DAY / 56
@@ -5568,6 +5976,8 @@
 	      data = _ref$data === undefined ? [] : _ref$data,
 	      _ref$onClick = _ref.onClick,
 	      onClick = _ref$onClick === undefined ? NOOP : _ref$onClick,
+	      _ref$onLabelClick = _ref.onLabelClick,
+	      onLabelClick = _ref$onLabelClick === undefined ? NOOP : _ref$onLabelClick,
 	      _ref$viewMode = _ref.viewMode,
 	      viewMode = _ref$viewMode === undefined ? 'week' : _ref$viewMode,
 	      _ref$dataMode = _ref.dataMode,
@@ -5589,21 +5999,16 @@
 	      _ref$styleOptions = _ref.styleOptions,
 	      styleOptions = _ref$styleOptions === undefined ? {} : _ref$styleOptions;
 
-	  var unit = UNIT[viewMode];
-	  var minTime = Math.min.apply(null, data.map(function (v) {
-	    return v.expect_from;
-	  }).concat(data.filter(function (v) {
-	    return !!v.reality_from;
-	  }))) - unit * 40;
-	  var maxTime = Math.max.apply(null, data.map(function (v) {
-	    return v.expect_to;
-	  }).concat(data.filter(function (v) {
-	    return !!v.reality_to;
-	  }))) + unit * 40;
+	  var unit = UNIT$1[viewMode];
+	  var current = new Date().getTime();
+
+	  var _getExtremeTimeByData = getExtremeTimeByDataMode({ data: data, dataMode: dataMode, current: current, unit: unit }),
+	      minTime = _getExtremeTimeByData.minTime,
+	      maxTime = _getExtremeTimeByData.maxTime;
+
 	  var width = (maxTime - minTime) / unit + maxTextWidth;
 	  var height = data.length * rowHeight + offsetY + footerHeight;
 	  var box = '0 0 ' + width + ' ' + height;
-	  var current = new Date().getTime();
 	  var styles = getStyles(styleOptions);
 
 	  return h(
@@ -5660,6 +6065,7 @@
 	    h(Labels, {
 	      styles: styles,
 	      data: data,
+	      onLabelClick: onLabelClick,
 	      offsetY: offsetY,
 	      rowHeight: rowHeight
 	    }),
@@ -5689,200 +6095,6 @@
 	  );
 	}
 
-	// true  -> String#at
-	// false -> String#codePointAt
-	var _stringAt = function (TO_STRING) {
-	  return function (that, pos) {
-	    var s = String(_defined(that));
-	    var i = _toInteger(pos);
-	    var l = s.length;
-	    var a, b;
-	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	      ? TO_STRING ? s.charAt(i) : a
-	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-	  };
-	};
-
-	var _redefine = _hide;
-
-	var _objectDps = _descriptors ? Object.defineProperties : function defineProperties(O, Properties) {
-	  _anObject(O);
-	  var keys = _objectKeys(Properties);
-	  var length = keys.length;
-	  var i = 0;
-	  var P;
-	  while (length > i) _objectDp.f(O, P = keys[i++], Properties[P]);
-	  return O;
-	};
-
-	var document$2 = _global.document;
-	var _html = document$2 && document$2.documentElement;
-
-	// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
-
-
-
-	var IE_PROTO$1 = _sharedKey('IE_PROTO');
-	var Empty = function () { /* empty */ };
-	var PROTOTYPE$1 = 'prototype';
-
-	// Create object with fake `null` prototype: use iframe Object with cleared prototype
-	var createDict = function () {
-	  // Thrash, waste and sodomy: IE GC bug
-	  var iframe = _domCreate('iframe');
-	  var i = _enumBugKeys.length;
-	  var lt = '<';
-	  var gt = '>';
-	  var iframeDocument;
-	  iframe.style.display = 'none';
-	  _html.appendChild(iframe);
-	  iframe.src = 'javascript:'; // eslint-disable-line no-script-url
-	  // createDict = iframe.contentWindow.Object;
-	  // html.removeChild(iframe);
-	  iframeDocument = iframe.contentWindow.document;
-	  iframeDocument.open();
-	  iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
-	  iframeDocument.close();
-	  createDict = iframeDocument.F;
-	  while (i--) delete createDict[PROTOTYPE$1][_enumBugKeys[i]];
-	  return createDict();
-	};
-
-	var _objectCreate = Object.create || function create(O, Properties) {
-	  var result;
-	  if (O !== null) {
-	    Empty[PROTOTYPE$1] = _anObject(O);
-	    result = new Empty();
-	    Empty[PROTOTYPE$1] = null;
-	    // add "__proto__" for Object.getPrototypeOf polyfill
-	    result[IE_PROTO$1] = O;
-	  } else result = createDict();
-	  return Properties === undefined ? result : _objectDps(result, Properties);
-	};
-
-	var _wks = createCommonjsModule(function (module) {
-	var store = _shared('wks');
-
-	var Symbol = _global.Symbol;
-	var USE_SYMBOL = typeof Symbol == 'function';
-
-	var $exports = module.exports = function (name) {
-	  return store[name] || (store[name] =
-	    USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : _uid)('Symbol.' + name));
-	};
-
-	$exports.store = store;
-	});
-
-	var def = _objectDp.f;
-
-	var TAG = _wks('toStringTag');
-
-	var _setToStringTag = function (it, tag, stat) {
-	  if (it && !_has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
-	};
-
-	var IteratorPrototype = {};
-
-	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-	_hide(IteratorPrototype, _wks('iterator'), function () { return this; });
-
-	var _iterCreate = function (Constructor, NAME, next) {
-	  Constructor.prototype = _objectCreate(IteratorPrototype, { next: _propertyDesc(1, next) });
-	  _setToStringTag(Constructor, NAME + ' Iterator');
-	};
-
-	// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
-
-
-	var IE_PROTO$2 = _sharedKey('IE_PROTO');
-	var ObjectProto = Object.prototype;
-
-	var _objectGpo = Object.getPrototypeOf || function (O) {
-	  O = _toObject(O);
-	  if (_has(O, IE_PROTO$2)) return O[IE_PROTO$2];
-	  if (typeof O.constructor == 'function' && O instanceof O.constructor) {
-	    return O.constructor.prototype;
-	  } return O instanceof Object ? ObjectProto : null;
-	};
-
-	var ITERATOR = _wks('iterator');
-	var BUGGY = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
-	var FF_ITERATOR = '@@iterator';
-	var KEYS = 'keys';
-	var VALUES = 'values';
-
-	var returnThis = function () { return this; };
-
-	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
-	  _iterCreate(Constructor, NAME, next);
-	  var getMethod = function (kind) {
-	    if (!BUGGY && kind in proto) return proto[kind];
-	    switch (kind) {
-	      case KEYS: return function keys() { return new Constructor(this, kind); };
-	      case VALUES: return function values() { return new Constructor(this, kind); };
-	    } return function entries() { return new Constructor(this, kind); };
-	  };
-	  var TAG = NAME + ' Iterator';
-	  var DEF_VALUES = DEFAULT == VALUES;
-	  var VALUES_BUG = false;
-	  var proto = Base.prototype;
-	  var $native = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT];
-	  var $default = $native || getMethod(DEFAULT);
-	  var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
-	  var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
-	  var methods, key, IteratorPrototype;
-	  // Fix native
-	  if ($anyNative) {
-	    IteratorPrototype = _objectGpo($anyNative.call(new Base()));
-	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
-	      // Set @@toStringTag to native iterators
-	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && typeof IteratorPrototype[ITERATOR] != 'function') _hide(IteratorPrototype, ITERATOR, returnThis);
-	    }
-	  }
-	  // fix Array#{values, @@iterator}.name in V8 / FF
-	  if (DEF_VALUES && $native && $native.name !== VALUES) {
-	    VALUES_BUG = true;
-	    $default = function values() { return $native.call(this); };
-	  }
-	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
-	    _hide(proto, ITERATOR, $default);
-	  }
-	  if (DEFAULT) {
-	    methods = {
-	      values: DEF_VALUES ? $default : getMethod(VALUES),
-	      keys: IS_SET ? $default : getMethod(KEYS),
-	      entries: $entries
-	    };
-	    if (FORCED) for (key in methods) {
-	      if (!(key in proto)) _redefine(proto, key, methods[key]);
-	    } else _export(_export.P + _export.F * (BUGGY || VALUES_BUG), NAME, methods);
-	  }
-	  return methods;
-	};
-
-	var $at = _stringAt(true);
-
-	// 21.1.3.27 String.prototype[@@iterator]()
-	_iterDefine(String, 'String', function (iterated) {
-	  this._t = String(iterated); // target
-	  this._i = 0;                // next index
-	// 21.1.5.2.1 %StringIteratorPrototype%.next()
-	}, function () {
-	  var O = this._t;
-	  var index = this._i;
-	  var point;
-	  if (index >= O.length) return { value: undefined, done: true };
-	  point = $at(O, index);
-	  this._i += point.length;
-	  return { value: point, done: false };
-	});
-
 	var _iterStep = function (done, value) {
 	  return { value: value, done: !!done };
 	};
@@ -5909,6 +6121,9 @@
 	  return _iterStep(0, [index, O[index]]);
 	}, 'values');
 
+	// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
+	_iterators.Arguments = _iterators.Array;
+
 	var TO_STRING_TAG = _wks('toStringTag');
 
 	var DOMIterables = ('CSSRuleList,CSSStyleDeclaration,CSSValueList,ClientRectList,DOMRectList,DOMStringList,' +
@@ -5922,6 +6137,7 @@
 	  var Collection = _global[NAME];
 	  var proto = Collection && Collection.prototype;
 	  if (proto && !proto[TO_STRING_TAG]) _hide(proto, TO_STRING_TAG, NAME);
+	  _iterators[NAME] = _iterators.Array;
 	}
 
 	var f$3 = _wks;
@@ -6439,6 +6655,26 @@
 	    value: function setOptions(options) {
 	      this.options = _extends$1({}, this.options, options);
 	      this.render();
+	    }
+	  }, {
+	    key: 'getXaxisByTime',
+	    value: function getXaxisByTime(time) {
+	      var unit = UNIT[this.options.viewMode];
+	      var current = new Date().getTime();
+
+	      var _getExtremeTimeByData = getExtremeTimeByDataMode({
+	        data: this.data,
+	        dataMode: this.options.dataMode,
+	        current: current,
+	        unit: unit
+	      }),
+	          minTime = _getExtremeTimeByData.minTime,
+	          maxTime = _getExtremeTimeByData.maxTime;
+
+	      if (time >= minTime && time <= maxTime) {
+	        return this.options.maxTextWidth + (time - minTime) / unit;
+	      }
+	      return false;
 	    }
 	  }, {
 	    key: 'render',

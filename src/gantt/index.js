@@ -1,5 +1,5 @@
 import h from '../h';
-import { DAY } from '../utils';
+import { DAY, getExtremeTimeByDataMode } from '../utils';
 import Layout from './Layout';
 import DayHeader from './DayHeader';
 import WeekHeader from './WeekHeader';
@@ -43,14 +43,11 @@ export default function Gantt({
   styleOptions = {}
 }) {
   const unit = UNIT[viewMode];
-  let minTime;
-  let maxTime;
-  const minTime = Math.min.apply(null, data.map(v => v.expect_from).concat(data.filter(v => !!v.reality_from).map(v => v.reality_from))) - unit * 40;
-  const maxTime = Math.max.apply(null, data.map(v => v.expect_to).concat(data.filter(v => !!v.reality_to).map(v => v.reality_to))) + unit * 40;
+  const current = (new Date()).getTime();
+  const { minTime, maxTime } = getExtremeTimeByDataMode({data, dataMode, current, unit});
   const width = (maxTime - minTime) / unit + maxTextWidth;
   const height = data.length * rowHeight + offsetY + footerHeight;
   const box = `0 0 ${width} ${height}`;
-  const current = (new Date()).getTime();
   const styles = getStyles(styleOptions);
 
   return (

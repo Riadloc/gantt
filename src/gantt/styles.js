@@ -10,9 +10,9 @@ export function getFont({
 
 export default function getStyles({
   BG = '#fff',
-  groupBg = '#f5f5f5',
+  groupBg = 'rgba(0,0,0,0)',
   lineColor = '#eee',
-  redLineColor = '#f04134',
+  redLineColor = '#ed3f14',
   baseBar = '#b8c2cc',
   whiteBar = '#ffffff',
   greenBar = '#52c41a',

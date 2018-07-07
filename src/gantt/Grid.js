@@ -6,9 +6,8 @@ export default function Grid({
   const W = width - thickWidth * 2;
   const H = height - footerHeight;
   return (
-    <g>
+    <g class="grid">
       {data.map((v, i) => {
-        if (!v.group) return null;
         const y = i * rowHeight + offsetY;
         return <rect x={thickWidth} y={y} width={W} height={rowHeight} style={styles.groupBg} />;
       })}

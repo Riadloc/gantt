@@ -4,6 +4,12 @@ function padZero(date) {
 
 export const DAY = 24 * 3600 * 1000;
 
+export const UNIT = {
+  day: DAY / 28,
+  week: 7 * DAY / 56,
+  month: 30 * DAY / 56
+};
+
 export function addDays(date, days) {
   date.setDate(date.getDate() + days);
   return date;
@@ -54,14 +60,36 @@ export function formatData(data) {
     return {
       id: v.id,
       name: v.name,
-      init_time: v.init_time.getTime(),
-      expect_from: v.expect_from?v.expect_from.getTime():null,
-      expect_to: v.expect_to?v.expect_to.getTime():null,
-      reality_from: v.reality_from?v.reality_from.getTime():null,
-      reality_to: v.reality_to?v.reality_to.getTime():null,
+      init_time: new Date(v.init_time).getTime(),
+      expect_from: v.expect_from?new Date(v.expect_from).getTime():null,
+      expect_to: v.expect_to?new Date(v.expect_to).getTime():null,
+      reality_from: v.reality_from?new Date(v.reality_from).getTime():null,
+      reality_to: v.reality_to?new Date(v.reality_to).getTime():null,
       addon: v.addon,
       important: v.important
     };
   });
 }
 
+export function getExtremeTimeByDataMode({data, dataMode, current, unit}) {
+  let minCol;
+  let maxCol;
+  switch (dataMode) {
+    case 'all':
+      minCol = [...data.map(v => v.expect_from), ...data.map(v => v.reality_from), ...data.map(v => v.init_time)].filter(v => Boolean(v));
+      maxCol = [...data.map(v => v.expect_to), ...data.map(v => v.reality_to)].filter(v => Boolean(v));
+      break;
+    case 'expect':
+      minCol = [...data.map(v => v.expect_from), ...data.map(v => v.init_time)].filter(v => Boolean(v));
+      maxCol = data.map(v => v.expect_to);
+      break;
+    case 'reality':
+      minCol = [...data.map(v => v.reality_from), ...data.map(v => v.init_time)].filter(v => Boolean(v));
+      maxCol = data.map(v => v.reality_to).filter(v => Boolean(v));
+      if (!maxCol.length) maxCol = [current];
+      break;
+  }
+  const minTime = Math.min.apply(null, minCol) - unit * 40;
+  const maxTime = Math.max.apply(null, maxCol) + unit * 40;
+  return { minTime, maxTime };
+}
