@@ -5606,7 +5606,7 @@
 	  return h(
 	    'g',
 	    { 'class': 'bar' },
-	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
+	    cur >= x0 ? h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }) : null,
 	    data.map(function (v, i) {
 	      var x = 0,
 	          x1 = 0,
@@ -5636,12 +5636,22 @@
 	        x1 = x0 + (v.init_time - minTime) / unit;
 	        w2 = (v.reality_to - v.init_time) / unit;
 	      }
+	      // 裁剪越界的范围
+	      if (x < x0) {
+	        if (x + w1 > x0) x = x0;else w1 = 0;
+	      }
+	      if (x1 < x0) {
+	        if (x1 + w2 > x0 || x1 + w3 > x0) x1 = x0;else {
+	          w2 = 0;
+	          w3 = 0;
+	        }
+	      }
 	      var y = y0 + i * rowHeight;
 	      var EY = y + barHeight / 4;
 	      var handler = function handler() {
 	        return onClick(v);
 	      };
-	      var title = '<p>' + v.name + '-' + v.addon.status + '</p>\n        <p>\u6807\u7B7E\uFF1A' + v.addon.label + '</p>\n        <p>\u88AB\u6307\u6D3E\u4EBA\uFF1A' + v.addon.assigned_user + '</p>\n        <p>\u671F\u671B\u8D77\u6B62\u65F6\u95F4\uFF1A' + formatTime(new Date(v.expect_from)) + ' \u81F3 ' + formatTime(new Date(v.expect_to)) + '</p>\n        <p>\u5B9E\u9645\u8D77\u6B62\u65F6\u95F4\uFF1A' + (v.reality_from ? formatTime(new Date(v.reality_from)) : '未开始') + ' ' + (v.reality_to ? '至 ' + formatTime(new Date(v.reality_to)) : v.reality_from ? '未结束' : '') + '</p>';
+	      var title = '<p>' + v.name + '-' + v.addon.status + '</p>\n        <p>\u6807\u7B7E\uFF1A' + v.addon.label + '</p>\n        <p>\u88AB\u6307\u6D3E\u4EBA\uFF1A' + v.addon.assigned_user + '</p>\n        <p>\u671F\u671B\u8D77\u6B62\u65F6\u95F4\uFF1A' + (v.expect_from ? formatTime(new Date(v.expect_from)) : formatTime(new Date(v.init_time))) + ' \u81F3 ' + formatTime(new Date(v.expect_to)) + '</p>\n        <p>\u5B9E\u9645\u8D77\u6B62\u65F6\u95F4\uFF1A' + (v.reality_from ? formatTime(new Date(v.reality_from)) : '未开始') + ' ' + (v.reality_to ? '至 ' + formatTime(new Date(v.reality_to)) : v.reality_from ? '未结束' : '') + '</p>';
 	      return h(
 	        'g',
 	        { title: title, key: i, style: { cursor: 'pointer' }, onClick: handler },
@@ -5672,7 +5682,7 @@
 	  return h(
 	    'g',
 	    { 'class': 'bar' },
-	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
+	    cur >= x0 ? h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }) : null,
 	    data.map(function (v, i) {
 	      var x = 0,
 	          w1 = 0;
@@ -5687,6 +5697,10 @@
 	          x = x0 + (v.expect_from - minTime) / unit;
 	          w1 = (v.expect_to - v.expect_from) / unit;
 	        }
+	      }
+	      // 裁剪越界的范围
+	      if (x < x0) {
+	        if (x + w1 > x0) x = x0;else w1 = 0;
 	      }
 	      var y = y0 + i * rowHeight;
 	      var handler = function handler() {
@@ -5721,7 +5735,7 @@
 	  return h(
 	    'g',
 	    { 'class': 'bar' },
-	    h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }),
+	    cur >= x0 ? h('line', { x1: cur, x2: cur, y1: offsetY, y2: height - footerHeight, style: styles.cline }) : null,
 	    data.map(function (v, i) {
 	      var x1 = 0,
 	          w1 = 0,
@@ -5739,6 +5753,13 @@
 	        w1 = (v.reality_to - v.init_time) / unit;
 	      } else {
 	        return h('g', null);
+	      }
+	      // 裁剪越界的范围
+	      if (x1 < x0) {
+	        if (x1 + w1 > x0 || x1 + w2 > x0) x1 = x0;else {
+	          w1 = 0;
+	          w2 = 0;
+	        }
 	      }
 	      var y = y0 + i * rowHeight;
 	      var reality_from = v.reality_from || v.init_time;
@@ -5987,15 +6008,17 @@
 	      _ref$offsetY = _ref.offsetY,
 	      offsetY = _ref$offsetY === undefined ? 60 : _ref$offsetY,
 	      _ref$rowHeight = _ref.rowHeight,
-	      rowHeight = _ref$rowHeight === undefined ? 40 : _ref$rowHeight,
+	      rowHeight = _ref$rowHeight === undefined ? 30 : _ref$rowHeight,
 	      _ref$barHeight = _ref.barHeight,
 	      barHeight = _ref$barHeight === undefined ? 16 : _ref$barHeight,
 	      _ref$thickWidth = _ref.thickWidth,
 	      thickWidth = _ref$thickWidth === undefined ? 1.4 : _ref$thickWidth,
 	      _ref$footerHeight = _ref.footerHeight,
-	      footerHeight = _ref$footerHeight === undefined ? 50 : _ref$footerHeight,
+	      footerHeight = _ref$footerHeight === undefined ? 36 : _ref$footerHeight,
 	      _ref$legends = _ref.legends,
 	      legends = _ref$legends === undefined ? LEGENDS : _ref$legends,
+	      _ref$extTime = _ref.extTime,
+	      extTime = _ref$extTime === undefined ? [] : _ref$extTime,
 	      _ref$styleOptions = _ref.styleOptions,
 	      styleOptions = _ref$styleOptions === undefined ? {} : _ref$styleOptions;
 
@@ -6006,6 +6029,8 @@
 	      minTime = _getExtremeTimeByData.minTime,
 	      maxTime = _getExtremeTimeByData.maxTime;
 
+	  minTime = extTime[0] || minTime;
+	  maxTime = extTime[1] || maxTime;
 	  var width = (maxTime - minTime) / unit + maxTextWidth;
 	  var height = data.length * rowHeight + offsetY + footerHeight;
 	  var box = '0 0 ' + width + ' ' + height;
