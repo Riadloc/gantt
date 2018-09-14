@@ -49,6 +49,29 @@ export default function render(vnode, ctx, e) {
       ctx.stroke();
     }
   }
+  if (tag === 'path') {
+    const {
+      d, style = {}
+    } = props;
+
+    let [x1, y1, x2, y2, x3, y3] = d.replace(/M|L|Z/g, '').slice(0,-1).split(' ').map(item => +item);
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.closePath();
+
+    if (style.fill) {
+      ctx.fillStyle = style.fill;
+      ctx.fill();
+    }
+    if (style.stroke) {
+      ctx.strokeStyle = style.stroke;
+      ctx.lineWidth = parseFloat(style['stroke-width'] || 1);
+      ctx.stroke();
+    }
+  }
   if (tag === 'text') {
     const { x, y, style } = props;
     if (style) {
@@ -72,7 +95,7 @@ export default function render(vnode, ctx, e) {
     ctx.fillText(children.join(''), x, y);
   }
 
-  children.forEach((v) => {
+  children.forEach((v) => { 
     if (typeof v !== 'string') {
       render(v, ctx, e);
     }

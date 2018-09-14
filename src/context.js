@@ -15,7 +15,7 @@ export default function createContext(dom) {
       },
       set(v) {
         canvas[key] = v * ratio;
-        canvas.style[key] = `${v}px`;
+        canvas.style[key] = `${Math.floor(v)}px`;
         ctx.scale(ratio, ratio);
       },
       enumerable: true,

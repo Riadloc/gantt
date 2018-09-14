@@ -76,16 +76,19 @@ export function getExtremeTimeByDataMode({data, dataMode, current, unit}) {
   let maxCol;
   switch (dataMode) {
     case 'all':
-      minCol = [...data.map(v => v.expect_from), ...data.map(v => v.reality_from), ...data.map(v => v.init_time)].filter(v => Boolean(v));
+      minCol = [...data.map(v => v.expect_from), ...data.map(v => v.reality_from)].filter(v => Boolean(v));
       maxCol = [...data.map(v => v.expect_to), ...data.map(v => v.reality_to)].filter(v => Boolean(v));
+      if (!minCol.length) minCol = data.map(v => v.init_time);
       break;
     case 'expect':
-      minCol = [...data.map(v => v.expect_from), ...data.map(v => v.init_time)].filter(v => Boolean(v));
+      minCol = data.map(v => v.expect_from).filter(v => Boolean(v));
       maxCol = data.map(v => v.expect_to);
+      if (!minCol.length) minCol = data.map(v => v.init_time);
       break;
     case 'reality':
-      minCol = [...data.map(v => v.reality_from), ...data.map(v => v.init_time)].filter(v => Boolean(v));
+      minCol = data.map(v => v.reality_from).filter(v => Boolean(v));
       maxCol = data.map(v => v.reality_to).filter(v => Boolean(v));
+      if (!minCol.length) minCol = data.map(v => v.init_time);
       if (!maxCol.length) maxCol = [current];
       break;
   }
